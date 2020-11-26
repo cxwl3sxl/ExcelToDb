@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Linq;
+using System.Windows;
 using System.Windows.Forms;
 using PinFun.Wpf.Controls;
 
@@ -23,6 +24,12 @@ namespace ExcelToDb
             {
                 ViewModel.Browse(ofd.SelectedPath);
             }
+        }
+
+        private void Next_OnClick(object sender, RoutedEventArgs e)
+        {
+            new ImportDialog(ViewModel.ThreadCount, ViewModel.Files.ToArray()).Show();
+            Close();
         }
     }
 }

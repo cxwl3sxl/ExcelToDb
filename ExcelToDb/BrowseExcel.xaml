@@ -36,6 +36,7 @@
             <CheckBox VerticalAlignment="Center" IsChecked="{Binding AutoCreateTable}">自动创建表</CheckBox>
             <Label Margin="20 0 0 0">线程数：</Label>
             <TextBox VerticalAlignment="Center" Width="50" Text="{Binding ThreadCount}"></TextBox>
+            <Label Margin="20 0 0 0" Foreground="Coral">注意：所有文件的首行必须是列名称，否则可能导入失败</Label>
         </StackPanel>
 
         <DataGrid AutoGenerateColumns="False" ItemsSource="{Binding Files}" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3">
@@ -52,7 +53,7 @@
                 VerticalAlignment="Top"
                 Command="{Binding RefreshTableNameCommand}">刷新表名</Button>
 
-        <Button Grid.Row="4" Grid.ColumnSpan="3" Margin="0 10">下一步</Button>
+        <Button Grid.Row="4" Grid.ColumnSpan="3" Margin="0 10" Click="Next_OnClick">执行导入</Button>
 
     </Grid>
 </controls:WindowBase>

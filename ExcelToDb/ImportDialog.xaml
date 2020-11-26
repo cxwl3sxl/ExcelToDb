@@ -1,0 +1,50 @@
+﻿<controls:WindowBase x:Class="ExcelToDb.ImportDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ExcelToDb"
+        xmlns:controls="clr-namespace:PinFun.Wpf.Controls;assembly=PinFun.Wpf"
+        WindowStartupLocation="CenterScreen"
+        mc:Ignorable="d"
+        Title="执行" Height="450" Width="800">
+    <Window.Resources>
+        <local:ImportDialogVm x:Key="Vm"></local:ImportDialogVm>
+    </Window.Resources>
+    <Grid Margin="20" DataContext="{StaticResource Vm}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition></RowDefinition>
+        </Grid.RowDefinitions>
+        <Label Grid.Row="0" Content="{Binding Process}"></Label>
+        <ScrollViewer Name="ScrollViewer" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden">
+        <ItemsControl ItemsSource="{Binding Threads}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel Width="{Binding ActualWidth, ElementName=ScrollViewer}"></WrapPanel>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border Height="100" Width="300" BorderBrush="#eee" BorderThickness="1" Margin="10">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition></RowDefinition>
+                                <RowDefinition></RowDefinition>
+                            </Grid.RowDefinitions>
+                            <Border Grid.RowSpan="2" Background="#eee" Width="{Binding Progress}" HorizontalAlignment="Left"></Border>
+                            <Label VerticalAlignment="Bottom" HorizontalAlignment="Center" Content="{Binding CurrentFile}"></Label>
+                            <StackPanel VerticalAlignment="Top" Grid.Row="1" HorizontalAlignment="Center" Orientation="Horizontal">
+                                <Label Content="{Binding Finished}"></Label>
+                                <Label>/</Label>
+                                <Label Content="{Binding Total}"></Label>
+                            </StackPanel>
+                            <Label Grid.RowSpan="2" HorizontalAlignment="Right" VerticalAlignment="Top" Content="{Binding State}"></Label>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</controls:WindowBase>
