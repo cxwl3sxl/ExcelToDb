@@ -1,9 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
+using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
+using Dapper;
+using ExcelDataReader;
+using log4net;
+using PinFun.Core.Utils;
 using PinFun.Wpf;
 
 namespace ExcelToDb
@@ -76,7 +81,8 @@ namespace ExcelToDb
     public class WorkThread : ViewModelBase
     {
         private readonly Func<TableMap> _getNextTableFunc;
-        private bool _stop = false;
+        private bool _stop;
+        private readonly ILog _log = LogManager.GetLogger(typeof(WorkThread));
 
         public WorkThread(Func<TableMap> getNextTable)
         {
@@ -118,7 +124,15 @@ namespace ExcelToDb
         void Start()
         {
             var map = _getNextTableFunc();
-            ProcessMap(map);
+            try
+            {
+                ProcessMap(map);
+            }
+            catch (Exception ex)
+            {
+                State = $"出错";
+                _log.Warn("处理出错", ex);
+            }
         }
 
         void ProcessMap(TableMap map)
@@ -131,17 +145,47 @@ namespace ExcelToDb
 
             CurrentFile = map.FileName;
 
-            Total = 10;
-            Finished = 0;
-            Progress = 0;
-
-            for (var i = 0; i < 10; i++)
+            DataSet ds;
+            using (var stream = File.Open(map.FullPath, FileMode.Open, FileAccess.Read))
             {
-                Thread.Sleep(2000);
-                if (_stop) break;
-                //模拟处理
-                Finished++;
-                Progress = Finished * 300 / Total;
+                using var reader = ExcelReaderFactory.CreateReader(stream);
+                ds = reader.AsDataSet();
+            }
+
+            if (ds != null && ds.Tables.Count >= 1)
+            {
+                Total = ds.Tables[0].Rows.Count - 1;
+                Finished = 0;
+                Progress = 0;
+                var cols = new Dictionary<string, string>();
+                foreach (DataColumn column in ds.Tables[0].Columns)
+                {
+                    cols[ds.Tables[0].Rows[0][column].ToString()] = column.ColumnName;
+                }
+
+                using var db = GlobalInfo.Instance.GetDb();
+
+                for (var i = 1; i <= Total; i++)
+                {
+                    var sql = GlobalInfo.Instance.BuildInsert(map.TableName, ds.Tables[0].Rows[i], cols);
+                    try
+                    {
+                        db.Execute(sql);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (!ex.Message.Contains("PRIMARY KEY"))
+                        {
+                            _log.Debug($"出错的语句：{sql}");
+                            throw;
+                        }
+                    }
+
+                    if (_stop) break;
+                    //模拟处理
+                    Finished++;
+                    Progress = Finished * 300 / Total;
+                }
             }
 
             if (_stop)

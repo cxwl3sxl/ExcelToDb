@@ -16,6 +16,7 @@ namespace ExcelToDb
             Files = new ObservableCollection<TableMap>();
             RefreshTableNameCommand = new RelayCommand(RefreshTableName);
             ThreadCount = Environment.ProcessorCount;
+            TableNameReplace = @"dbo.;_\d+";
         }
 
         public string Dir
@@ -93,9 +94,12 @@ namespace ExcelToDb
     {
         public TableMap(string file)
         {
+            FullPath = file;
             FileName = Path.GetFileNameWithoutExtension(file);
             TableName = FileName;
         }
+
+        public string FullPath { get; }
 
         public string FileName { get; }
 

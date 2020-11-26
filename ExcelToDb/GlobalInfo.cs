@@ -1,4 +1,6 @@
-﻿using ExcelToDb.DbDiscover;
+﻿using System.Collections.Generic;
+using System.Data;
+using ExcelToDb.DbDiscover;
 using PinFun.Core.DataBase;
 using PinFun.Core.Utils;
 
@@ -21,6 +23,11 @@ namespace ExcelToDb
         public Db GetDb()
         {
             return new Db(_discover.DbType, _discover.GetConnectionString(_server, _db, _uid, _pwd), false);
+        }
+
+        public string BuildInsert(string tableName, DataRow row, Dictionary<string, string> colMap)
+        {
+            return _discover.BuildInsert(tableName, row, colMap);
         }
     }
 }
