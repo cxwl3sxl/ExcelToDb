@@ -8,11 +8,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ExcelDataReader" Version="3.6.0" />
-    <PackageReference Include="ExcelDataReader.DataSet" Version="3.6.0" />
     <PackageReference Include="MaterialDesignColors" Version="1.2.1" />
     <PackageReference Include="MaterialDesignThemes" Version="3.0.0" />
     <PackageReference Include="PinFun.Wpf" Version="2.0.2.71" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="ExcelDataReader">
+      <HintPath>..\lib\ExcelDataReader.dll</HintPath>
+    </Reference>
+    <Reference Include="ExcelDataReader.DataSet">
+      <HintPath>..\lib\ExcelDataReader.DataSet.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

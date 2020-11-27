@@ -28,6 +28,7 @@ namespace ExcelToDb
 
         private void Next_OnClick(object sender, RoutedEventArgs e)
         {
+            GlobalInfo.Instance.SwitchConfig.IgnoreError = ViewModel.IgnoreError;
             new ImportDialog(ViewModel.ThreadCount, ViewModel.Files.ToArray()).Show();
             Close();
         }

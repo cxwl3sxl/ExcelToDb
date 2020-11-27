@@ -48,7 +48,7 @@ namespace ExcelToDb.DbDiscover
                     }
                     else
                     {
-                        values.Add($"'{v}'");
+                        values.Add($"'{v.ToString()?.Replace("'", "''")}'");
                     }
                 }
             }

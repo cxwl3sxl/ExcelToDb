@@ -33,7 +33,8 @@
         <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding TableNameReplace}"></TextBox>
 
         <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal">
-            <CheckBox VerticalAlignment="Center" IsChecked="{Binding AutoCreateTable}">自动创建表</CheckBox>
+            <CheckBox VerticalAlignment="Center" IsEnabled="False" ToolTip="尚未支持" IsChecked="{Binding AutoCreateTable}">自动创建表</CheckBox>
+            <CheckBox VerticalAlignment="Center" ToolTip="发生异常后继续处理，不中断" IsChecked="{Binding IgnoreError}">忽略异常</CheckBox>
             <Label Margin="20 0 0 0">线程数：</Label>
             <TextBox VerticalAlignment="Center" Width="50" Text="{Binding ThreadCount}"></TextBox>
             <Label Margin="20 0 0 0" Foreground="Coral">注意：所有文件的首行必须是列名称，否则可能导入失败</Label>

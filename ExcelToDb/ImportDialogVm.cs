@@ -4,18 +4,18 @@ using System.Collections.ObjectModel;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using Dapper;
 using ExcelDataReader;
 using log4net;
-using PinFun.Core.Utils;
+using PinFun.Core.DataBase;
 using PinFun.Wpf;
 
 namespace ExcelToDb
 {
     public class ImportDialogVm : ViewModelBase
     {
-        private int _total, _finished;
+        private int _total, _finished, _error, _rowCount;
         private readonly List<TableMap> _allMaps = new List<TableMap>();
         private readonly object _mapLock = new object();
 
@@ -41,7 +41,7 @@ namespace ExcelToDb
 
             for (var i = 0; i < threadCount; i++)
             {
-                Threads.Add(new WorkThread(GetNexTable));
+                Threads.Add(new WorkThread(GetNexTable, Report));
             }
         }
 
@@ -55,7 +55,16 @@ namespace ExcelToDb
 
         void UpdateProcess()
         {
-            Process = _total == 0 ? $"共计：{_total}个，已完成：100%" : $"共计：{_total}个，已完成：{(_finished * 100.0 / _total):F}%";
+            Process = _total == 0 ? $"共计：{_total}个，已完成文件：100%" : $"共计：{_total}个，已完成文件：{(_finished * 100.0 / _total):F}%，错误数量：{_error}，成功插入：{_rowCount}";
+        }
+
+        void Report(bool error)
+        {
+            if (error)
+                Interlocked.Increment(ref _error);
+            else
+                Interlocked.Increment(ref _rowCount);
+            UpdateProcess();
         }
 
         TableMap GetNexTable()
@@ -83,10 +92,14 @@ namespace ExcelToDb
         private readonly Func<TableMap> _getNextTableFunc;
         private bool _stop;
         private readonly ILog _log = LogManager.GetLogger(typeof(WorkThread));
+        private readonly Action<bool> _reportError;
+        private readonly Db _db;
 
-        public WorkThread(Func<TableMap> getNextTable)
+        public WorkThread(Func<TableMap> getNextTable, Action<bool> reportError)
         {
+            _reportError = reportError;
             _getNextTableFunc = getNextTable;
+            _db = GlobalInfo.Instance.GetDb();
             State = "运行中";
             Task.Run(Start);
         }
@@ -148,8 +161,11 @@ namespace ExcelToDb
             DataSet ds;
             using (var stream = File.Open(map.FullPath, FileMode.Open, FileAccess.Read))
             {
-                using var reader = ExcelReaderFactory.CreateReader(stream);
+                var reader = ExcelReaderFactory.CreateReader(stream);
                 ds = reader.AsDataSet();
+                reader.Close();
+                reader.Dispose();
+                stream.Close();
             }
 
             if (ds != null && ds.Tables.Count >= 1)
@@ -163,21 +179,40 @@ namespace ExcelToDb
                     cols[ds.Tables[0].Rows[0][column].ToString()] = column.ColumnName;
                 }
 
-                using var db = GlobalInfo.Instance.GetDb();
-
                 for (var i = 1; i <= Total; i++)
                 {
                     var sql = GlobalInfo.Instance.BuildInsert(map.TableName, ds.Tables[0].Rows[i], cols);
                     try
                     {
-                        db.Execute(sql);
+                        _db.Execute(sql);
+                        _reportError(false);
                     }
                     catch (Exception ex)
                     {
-                        if (!ex.Message.Contains("PRIMARY KEY"))
+                        _reportError(true);
+                        if (GlobalInfo.Instance.SwitchConfig.IgnoreError)
                         {
-                            _log.Debug($"出错的语句：{sql}");
-                            throw;
+                            _log.Debug($"插入错误({map.FileName}：{i})：{sql}", ex);
+                        }
+                        else
+                        {
+                            if (ex.Message.Contains("将截断字符串或二进制数据"))
+                            {
+                                _log.Debug($"字符超长({map.FileName}：{i})：{sql}", ex);
+                            }
+                            else if (ex.Message.Contains("PRIMARY KEY"))
+                            {
+                                _log.Debug($"主键冲突({map.FileName}：{i})：{sql}", ex);
+                            }
+                            else if (ex.Message.Contains("列不允许有 Null 值"))
+                            {
+                                _log.Debug($"主键为空({map.FileName}：{i})：{sql}", ex);
+                            }
+                            else
+                            {
+                                _log.Debug($"其他错误({map.FileName}：{i})：{sql}");
+                                throw;
+                            }
                         }
                     }
 

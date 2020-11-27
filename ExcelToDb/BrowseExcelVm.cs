@@ -17,6 +17,7 @@ namespace ExcelToDb
             RefreshTableNameCommand = new RelayCommand(RefreshTableName);
             ThreadCount = Environment.ProcessorCount;
             TableNameReplace = @"dbo.;_\d+";
+            IgnoreError = true;
         }
 
         public string Dir
@@ -36,6 +37,12 @@ namespace ExcelToDb
         }
 
         public bool AutoCreateTable
+        {
+            get => GetValue<bool>();
+            set => SetValue(value);
+        }
+
+        public bool IgnoreError
         {
             get => GetValue<bool>();
             set => SetValue(value);

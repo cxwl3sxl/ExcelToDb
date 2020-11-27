@@ -1,4 +1,6 @@
-﻿namespace ExcelToDb
+﻿using System.Text;
+
+namespace ExcelToDb
 {
     /// <summary>
     /// Interaction logic for App.xaml
@@ -7,6 +9,8 @@
     {
         public App()
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
             Init();
         }
 
